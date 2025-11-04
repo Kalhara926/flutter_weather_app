@@ -1,23 +1,35 @@
-// lib/main.dart
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'screens/splash_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:weather_app/screens/onboarding_screen.dart';
+import 'package:weather_app/screens/weather_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final prefs = await SharedPreferences.getInstance();
+  final hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
+
+  runApp(MyApp(hasSeenOnboarding: hasSeenOnboarding));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool hasSeenOnboarding;
+
+  const MyApp({super.key, required this.hasSeenOnboarding});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SkyCast',
+      title: 'WeatherNow',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(textTheme: GoogleFonts.latoTextTheme()),
-      home: const SplashScreen(), // <-- මෙතැන වෙනස් කරන්න
+      theme: ThemeData(
+        textTheme: GoogleFonts.latoTextTheme(),
+        scaffoldBackgroundColor: const Color(0xFF1B222E),
+      ),
+      home: hasSeenOnboarding
+          ? const WeatherScreen()
+          : const OnboardingScreen(),
     );
   }
 }
