@@ -1,12 +1,9 @@
-// lib/services/weather_service.dart
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/weather_model.dart';
 
 class WeatherService {
-  static const _apiKey =
-      'e007d95a91d9b929c5d647a5382d2fd1'; // <-- ඔබගේ API Key එක
+  static const _apiKey = 'e007d95a91d9b929c5d647a5382d2fd1';
   static const _baseUrl = 'https://api.openweathermap.org/data/2.5/weather';
 
   Future<Weather> fetchWeather(String cityName) async {

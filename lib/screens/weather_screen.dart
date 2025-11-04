@@ -1,5 +1,3 @@
-// lib/screens/weather_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,14 +5,12 @@ import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'dart:convert';
-
 import '../models/weather_model.dart';
 import '../models/history_item_model.dart';
 import '../services/weather_service.dart';
 import '../widgets/weather_detail_item.dart';
 import 'settings_screen.dart';
 
-// UI එකේ ඇති වර්ණ
 const Color kBackgroundColor = Color(0xFF1B222E);
 const Color kCardColor = Color(0xFF2C3644);
 const Color kPrimaryColor = Color(0xFF007BFF);
@@ -53,7 +49,6 @@ class _WeatherScreenState extends State<WeatherScreen> {
     _fetchCurrentLocationWeather();
   }
 
-  // --- Video Player Logic ---
   void _initializeVideoPlayer(String videoAsset) {
     _videoController?.dispose();
     _videoController = VideoPlayerController.asset(videoAsset)
@@ -93,7 +88,6 @@ class _WeatherScreenState extends State<WeatherScreen> {
     }
   }
 
-  // --- Data Fetching & History Logic ---
   Future<void> _fetchCurrentLocationWeather() async {
     setState(() {
       _isLoading = true;
@@ -112,11 +106,9 @@ class _WeatherScreenState extends State<WeatherScreen> {
         throw Exception('Location permissions are permanently denied.');
       }
 
-      // 'position' variable එක මෙතන define කර ඇත
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-
       final weather = await _weatherService.fetchWeatherByCoords(
         position.latitude,
         position.longitude,
@@ -146,7 +138,6 @@ class _WeatherScreenState extends State<WeatherScreen> {
   }
 
   Future<void> _fetchWeatherByCity() async {
-    // 'cityName' variable එක මෙතන define කර ඇත
     final cityName = _cityController.text;
     if (cityName.isEmpty) return;
 
@@ -239,6 +230,31 @@ class _WeatherScreenState extends State<WeatherScreen> {
         .toList();
     await prefs.setStringList(kWeatherHistoryKey, historyJson);
     if (mounted) setState(() {});
+  }
+
+  String _getWeatherEmoji(String condition) {
+    switch (condition.toLowerCase()) {
+      case 'clear':
+        return '☀️';
+      case 'clouds':
+        return '☁️';
+      case 'rain':
+        return '🌧️';
+      case 'drizzle':
+        return '🌦️';
+      case 'thunderstorm':
+        return '⛈️';
+      case 'snow':
+        return '❄️';
+      case 'mist':
+      case 'smoke':
+      case 'haze':
+      case 'dust':
+      case 'fog':
+        return '🌫️';
+      default:
+        return '🌍';
+    }
   }
 
   @override
@@ -415,87 +431,84 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
   Widget _buildWeatherDisplay({Key? key}) {
     if (_weather == null) return const SizedBox.shrink();
+
     return Container(
       key: key,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: kCardColor.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '${_weather!.cityName}, ${_weather!.country}',
-            style: GoogleFonts.lato(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+          _AnimatedSlideFadeIn(
+            delay: const Duration(milliseconds: 300),
+            child: Text(
+              _weather!.cityName,
+              style: GoogleFonts.lato(
+                color: Colors.white,
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
             ),
           ),
-          Text(
-            _weather!.condition,
-            style: GoogleFonts.lato(color: Colors.white70, fontSize: 16),
+          const SizedBox(height: 12),
+          _AnimatedSlideFadeIn(
+            delay: const Duration(milliseconds: 400),
+            child: Text(
+              _getWeatherEmoji(_weather!.condition),
+              style: const TextStyle(fontSize: 70),
+            ),
+          ),
+          _AnimatedSlideFadeIn(
+            delay: const Duration(milliseconds: 500),
+            child: Text(
+              '${_weather!.temperature.round()}°C',
+              style: GoogleFonts.lato(
+                color: Colors.white,
+                fontSize: 64,
+                fontWeight: FontWeight.w300,
+              ),
+            ),
+          ),
+          _AnimatedSlideFadeIn(
+            delay: const Duration(milliseconds: 600),
+            child: Text(
+              _weather!.condition,
+              style: GoogleFonts.lato(color: Colors.white70, fontSize: 20),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          _AnimatedSlideFadeIn(
+            delay: const Duration(milliseconds: 700),
+            child: const Divider(color: Colors.white24),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Image.network(
-                _weather!.iconUrl,
-                height: 80,
-                width: 80,
-                errorBuilder: (c, o, s) =>
-                    const Icon(Icons.cloud_off, color: Colors.yellow, size: 80),
-              ),
-              const SizedBox(width: 12),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _weather!.temperature.toStringAsFixed(0),
-                    style: GoogleFonts.lato(
-                      color: Colors.white,
-                      fontSize: 72,
-                      fontWeight: FontWeight.w300,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      '°C',
-                      style: GoogleFonts.lato(
-                        color: Colors.white70,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Divider(color: Colors.white24),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              WeatherDetailItem(
-                icon: Icons.air,
-                value: '${_weather!.windSpeed.toStringAsFixed(1)} km/h',
-                label: 'Wind',
-              ),
-              WeatherDetailItem(
-                icon: Icons.water_drop_outlined,
-                value: '${_weather!.humidity}%',
-                label: 'Humidity',
-              ),
-              WeatherDetailItem(
-                icon: Icons.visibility_outlined,
-                value: '${_weather!.visibility.toStringAsFixed(1)} km',
-                label: 'Visibility',
-              ),
-            ],
+          _AnimatedSlideFadeIn(
+            delay: const Duration(milliseconds: 800),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                WeatherDetailItem(
+                  icon: Icons.air,
+                  value: '${_weather!.windSpeed.toStringAsFixed(1)} km/h',
+                  label: 'Wind',
+                ),
+                WeatherDetailItem(
+                  icon: Icons.water_drop_outlined,
+                  value: '${_weather!.humidity}%',
+                  label: 'Humidity',
+                ),
+                WeatherDetailItem(
+                  icon: Icons.visibility_outlined,
+                  value: '${_weather!.visibility.toStringAsFixed(1)} km',
+                  label: 'Visibility',
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -507,5 +520,48 @@ class _WeatherScreenState extends State<WeatherScreen> {
     _videoController?.dispose();
     _cityController.dispose();
     super.dispose();
+  }
+}
+
+class _AnimatedSlideFadeIn extends StatefulWidget {
+  final Widget child;
+  final Duration delay;
+  final Duration duration;
+  const _AnimatedSlideFadeIn({
+    required this.child,
+    this.delay = Duration.zero,
+    this.duration = const Duration(milliseconds: 400),
+  });
+  @override
+  State<_AnimatedSlideFadeIn> createState() => _AnimatedSlideFadeInState();
+}
+
+class _AnimatedSlideFadeInState extends State<_AnimatedSlideFadeIn> {
+  bool _animate = false;
+  @override
+  void initState() {
+    super.initState();
+    Timer(widget.delay, () {
+      if (mounted) {
+        setState(() {
+          _animate = true;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedOpacity(
+      opacity: _animate ? 1.0 : 0.0,
+      duration: widget.duration,
+      curve: Curves.easeOut,
+      child: AnimatedContainer(
+        duration: widget.duration,
+        curve: Curves.easeOut,
+        padding: EdgeInsets.only(top: _animate ? 0 : 20.0),
+        child: widget.child,
+      ),
+    );
   }
 }

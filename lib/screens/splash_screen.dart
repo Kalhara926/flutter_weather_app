@@ -1,6 +1,8 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
+import 'onboarding_screen.dart';
 import 'weather_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -11,78 +13,106 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
+    with TickerProviderStateMixin {
+  late AnimationController _fadeController;
+  late AnimationController _bounceController;
+
   late Animation<double> _fadeAnimation;
+  late Animation<double> _bounceAnimation;
 
   @override
   void initState() {
+    print("<<<<<<<<<< SPLASH SCREEN INITIALIZED! >>>>>>>>>>");
     super.initState();
 
-    _controller = AnimationController(
+    _fadeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1200),
     );
-
-    _scaleAnimation = Tween<double>(
-      begin: 0.5,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutQuint));
-
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
+    _bounceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _bounceAnimation = CurvedAnimation(
+      parent: _bounceController,
+      curve: Curves.elasticOut,
+    );
 
-    _controller.forward();
-
-    Timer(const Duration(seconds: 3), () {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const WeatherScreen()),
-      );
+    Timer(const Duration(milliseconds: 200), () {
+      if (mounted) _bounceController.forward();
     });
+    Timer(const Duration(milliseconds: 500), () {
+      if (mounted) _fadeController.forward();
+    });
+
+    _navigateToNextScreen();
+  }
+
+  void _navigateToNextScreen() async {
+    WidgetsFlutterBinding.ensureInitialized();
+
+    await Future.delayed(const Duration(milliseconds: 3500));
+
+    if (!mounted) return;
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
+
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            hasSeenOnboarding
+            ? const WeatherScreen()
+            : const OnboardingScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        transitionDuration: const Duration(milliseconds: 600),
+      ),
+    );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _fadeController.dispose();
+    _bounceController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF2E335A), Color(0xFF1C1B33)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Center(
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.cloud_queue, color: Colors.white, size: 100),
-                  const SizedBox(height: 20),
-                  Text(
-                    'SkyCast',
-                    style: GoogleFonts.lato(
-                      fontSize: 40,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+      backgroundColor: const Color(0xFF1B222E),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ScaleTransition(
+              scale: _bounceAnimation,
+              child: const Icon(
+                Icons.cloud_queue_rounded,
+                size: 130,
+                color: Colors.white,
               ),
             ),
-          ),
+            const SizedBox(height: 30),
+
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: Text(
+                'SkyCast',
+                style: GoogleFonts.lato(
+                  fontSize: 48,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 2,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

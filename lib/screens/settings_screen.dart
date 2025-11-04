@@ -1,10 +1,7 @@
-// lib/screens/settings_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'history_screen.dart'; // History screen එක import කිරීම
+import 'history_screen.dart';
 
-// UI එකේ ඇති වර්ණ
 const Color kBackgroundColor = Color(0xFF1B222E);
 const Color kCardColor = Color(0xFF2C3644);
 const Color kPrimaryColor = Color(0xFF007BFF);
@@ -42,7 +39,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // --- History Section ---
           _buildSectionHeader('HISTORY'),
           _buildSettingsCard(
             children: [
@@ -60,8 +56,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
           const SizedBox(height: 24),
-
-          // --- End of History Section ---
           _buildSectionHeader('UNITS'),
           _buildSettingsCard(
             children: [

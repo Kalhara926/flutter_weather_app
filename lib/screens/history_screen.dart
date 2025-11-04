@@ -1,14 +1,10 @@
-// lib/screens/history_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
-
 import '../models/history_item_model.dart';
 
-// UI එකේ ඇති වර්ණ
 const Color kBackgroundColor = Color(0xFF1B222E);
 const Color kCardColor = Color(0xFF2C3644);
 
@@ -96,9 +92,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Widget _buildHistoryCard(HistoryItem item) {
-    // වේලාව සහ දිනය format කිරීම සඳහා intl package එක භාවිතා කිරීම
-    final timeFormat = DateFormat('h:mm a'); // e.g., 5:30 PM
-    final dateFormat = DateFormat('MMM d, yyyy'); // e.g., Oct 26, 2023
+    final timeFormat = DateFormat('h:mm a');
+    final dateFormat = DateFormat('MMM d, yyyy');
 
     return Card(
       color: kCardColor,
